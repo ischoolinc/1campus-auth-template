@@ -90,8 +90,7 @@
   ```
   // 此組僅做為測試使用
   const clientId = 'e07f29f27b365e1649946f370d3f25e1';
-  const clientSecret =
-  '07ee7e630195050e66ea69adfe5d3173c84e04b8abd3ea340746726393dcf0bc';
+  const clientSecret = '07ee7e630195050e66ea69adfe5d3173c84e04b8abd3ea340746726393dcf0bc';
   const redirectUri = 'http://localhost:3000/auth/callback';
   ```
 
