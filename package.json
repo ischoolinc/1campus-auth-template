@@ -1,0 +1,14 @@
+{
+  "name": "1campus_auth_template",
+  "scripts": {
+    "start": "pm2 kill; pm2 start app.js --watch",
+    "stop": "pm2 kill",
+    "watch": "pm2 logs"
+  },
+  "dependencies": {
+    "express": "4.18.2",
+    "express-session": "^1.17.3",
+    "node-fetch": "2.6.0",
+    "pm2": "5.2.2"
+  }
+}
