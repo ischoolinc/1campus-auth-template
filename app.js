@@ -1,6 +1,5 @@
-const express = require('express');
 const fetch = require('node-fetch');
-
+const express = require('express');
 const app = express();
 
 // OAuth 2.0 單一簽入流程 - 步驟 0
@@ -52,21 +51,26 @@ app.use('/auth/callback', async (req, res) => {
       if (!profile.error) {
         // OAuth 2.0 單一簽入流程 - 步驟 4
         return res.send({
-          ...profile,
+          status: 'Success',
           state: req.query.state,
+          profile,
         });
       }
 
       // OAuth 2.0 單一簽入流程 - 步驟 5
-      return res.send({ status: 'Profile Error', ...profile });
+      return res.send({ status: 'Error', state: req.query.state, profile });
     }
 
     // OAuth 2.0 單一簽入流程 - 步驟 5
-    return res.send({ status: 'Token Error', ...token });
+    return res.send({ status: 'Error', state: req.query.state, token });
   }
 
   // OAuth 2.0 單一簽入流程 - 步驟 5
-  return res.send({ status: 'Params' });
+  return res.send({
+    status: 'Error',
+    state: req.query.state,
+    error: 'Missing code variable',
+  });
 });
 
 app.listen(process.env.PORT || 3000);

@@ -132,21 +132,26 @@
         if (!profile.error) {
           // OAuth 2.0 單一簽入流程 - 步驟 4
           return res.send({
-            ...profile,
+            status: 'Success',
             state: req.query.state,
+            profile,
           });
         }
 
         // OAuth 2.0 單一簽入流程 - 步驟 5
-        return res.send({ status: 'Profile Error', ...profile });
+        return res.send({ status: 'Error', state: req.query.state, profile });
       }
 
       // OAuth 2.0 單一簽入流程 - 步驟 5
-      return res.send({ status: 'Token Error', ...token });
+      return res.send({ status: 'Error', state: req.query.state, token });
     }
 
     // OAuth 2.0 單一簽入流程 - 步驟 5
-    return res.send({ status: 'Params' });
+    return res.send({
+      status: 'Error',
+      state: req.query.state,
+      error: 'Missing code variable',
+    });
   });
   ```
 
