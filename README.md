@@ -100,45 +100,14 @@
   ```
   ```
   app.use('/auth/signIn', (req, res) => {
-    const { partner } = req.query;
-
-    if (partner === 'ntpc') {
-      const url = `https://sso.ntpc.edu.tw/logout.aspx?ReturnUrl=https%3A%2F%2Fauth.ntpc.edu.tw%2Flogout.php%3Fnext%3Dhttps%253A%252F%252Fauth.ischool.com.tw%252Flogout.php%253Fnext%253Dhttps%25253A%25252F%25252Fpts.ntpc.edu.tw%25252Foauth%25252Fntpc_entry_point%25253Fstate%25253D_GUID_`;
-      return res.redirect(url);
-    }
-
-    if (
-      partner &&
-      ![
-        'google',
-        'apple',
-        'windowslive',
-        'facebook',
-        'TwEdu',
-        'edu_opkh',
-        'hlc',
-        'oidc_hc',
-        'oidc_cy',
-        'oidc_ttct',
-        'oidc_matsu',
-      ].includes(partner)
-    ) {
-      return res.send({ error: 'something is wrong' });
-    }
-
     // OAuth 2.0 單一簽入流程 - 步驟 1
-    const signInUrl =
-      'https://auth.ischool.com.tw/logout.php?next=' +
-      encodeURIComponent(
-        [
-          'https://auth.ischool.com.tw/oauth/authorize.php',
-          `?client_id=${clientId}`,
-          `&redirect_uri=${redirectUri}`,
-          '&response_type=code',
-          '&scope=User.Mail,User.BasicInfo',
-          partner ? `&linkSignIn=${partner}` : '',
-        ].join('')
-      );
+    const signInUrl = [
+      'https://auth.ischool.com.tw/oauth/authorize.php',
+      `?client_id=${clientId}`,
+      `&redirect_uri=${redirectUri}`,
+      '&response_type=code',
+      '&scope=User.Mail,User.BasicInfo',
+    ].join('');
 
     console.log('signInUrl => ', signInUrl);
     return res.redirect(signInUrl);
@@ -162,18 +131,7 @@
         `&code=${req.query.code}`,
       ].join('');
 
-      const tokenRsp = await fetch(tokenUrl);
-      const token = await tokenRsp.json();
-
-      /*
-      {
-        access_token: '45612316f93a878d073f9ca91196baa5',
-        expires_in: 3600,
-        token_type: 'bearer',
-        scope: 'User.Mail,User.BasicInfo',
-        refresh_token: '48f0a83ddb57e1347b37873648010bc1',
-      }
-      */
+      const token = await (await fetch(tokenUrl)).json();
       console.log('token => ', token);
 
       if (!token.error) {
@@ -183,35 +141,82 @@
           `?access_token=${token.access_token}`,
         ].join('');
 
-        const profileRsp = await fetch(profileUrl);
-        const profile = await profileRsp.json();
-
-        /* 
-        {
-          uuid: '2be1ee2e-2982-4b19-af67-044b13a78a45',
-          firstName: '展示帳號',
-          lastName: '',
-          language: 'English',
-          mail: 'teacher01@1campus.net',
-        }
-        */
+        const profile = await (await fetch(profileUrl)).json();
         console.log('profile => ', profile);
 
         if (!profile.error) {
           // OAuth 2.0 單一簽入流程 - 步驟 4
-          req.session.profile = profile;
-          return res.redirect('/profile');
+          return res.send(profile);
         }
 
         // OAuth 2.0 單一簽入流程 - 步驟 5
-        return res.send({ error: profile.error });
+        return res.send({ status: 'Profile Error', ...profile });
       }
 
       // OAuth 2.0 單一簽入流程 - 步驟 5
-      return res.send({ error: token.error });
+      return res.send({ status: 'Token Error', ...token });
     }
 
     // OAuth 2.0 單一簽入流程 - 步驟 5
-    return res.send({ erro: 'something is wrong' });
+    return res.send({ status: 'Params' });
   });
   ```
+
+## 1Campus 平台測試
+
+1. 使用瀏覽器先開啟以下網址
+    ```
+    https://1campus.net
+    ```
+2. 使用帳號密碼登入
+    ```
+    帳號：teacher01@1campus.net
+    密碼：1234
+    ```
+3. 使用瀏覽器開啟本範例的 EntryPoint 網址
+    ```
+    http://localhost:3000/auth/signIn
+    ```
+4. 網頁回傳以下訊息
+    ```
+    {
+      uuid: '2be1ee2e-2982-4b19-af67-044b13a78a45',
+      firstName: '展示帳號',
+      lastName: '',
+      language: 'English',
+      mail: 'teacher01@1campus.net',
+    }
+    ```
+5. 完成
+
+## 新北親師生平台測試
+
+1. 使用瀏覽器先開啟以下網址
+    ```
+    https://pts.ntpc.edu.tw
+    ```
+2. 使用帳號密碼登入
+    ```
+    帳號：test1234
+    密碼：test1234....
+    ```
+3. 為了測試必須先在背㬌登入 1Campus Auth，因此請先點選有整合 1Campus Auth 的相關服務，例如以下服務
+   ```
+   新北市專區 -> 積點趣教室
+   雲端資源專區 -> 均一教育平台
+   ```
+4. 使用瀏覽器開啟本範例的 EntryPoint 網址
+    ```
+    http://localhost:3000/auth/signIn
+    ```
+5. 網頁回傳以下訊息
+    ```
+    {
+      uuid: "36d4bf69-00d9-4570-8098-e30e08512d71",
+      firstName: "測試者",
+      lastName: '',
+      language: 'ChineseTraditional',
+      mail: "test1234@ntpc.edu.tw",
+    }
+    ```
+6. 完成
