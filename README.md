@@ -107,6 +107,7 @@
       `&redirect_uri=${redirectUri}`,
       '&response_type=code',
       '&scope=User.Mail,User.BasicInfo',
+      '&state=我是一個自訂的變數',
     ].join('');
 
     console.log('signInUrl => ', signInUrl);
@@ -146,7 +147,10 @@
 
         if (!profile.error) {
           // OAuth 2.0 單一簽入流程 - 步驟 4
-          return res.send(profile);
+          return res.send({
+            ...profile,
+            state: req.query.state,
+          });
         }
 
         // OAuth 2.0 單一簽入流程 - 步驟 5
